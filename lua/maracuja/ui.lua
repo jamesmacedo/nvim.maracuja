@@ -1,28 +1,62 @@
-local UI = {}
+local state = require("maracuja.models.ma")
 
-UI.window = nil
-UI.buf = nil
-UI.ns_id = vim.api.nvim_create_namespace("meu_plugin_ui")
-
-function UI.setup_lateral()
-	vim.opt.signcolumn = "yes:2"
-	local buf = vim.api.nvim_get_current_buf()
-
-	vim.fn.sign_define("MeuSinalCustomizado", {
-		text = "l",
-		texthl = "WarningMsg",
-		numhl = "WarningMsg"
-	})
-
-	local linha_desejada = 5
-
-	vim.fn.sign_place(
-		0,
-		"MeuGrupoDeSinais",
-		"MeuSinalCustomizado",
-		buf,
-		{ lnum = linha_desejada, priority = 2 }
-	)
+-- Configuração das cores (Highlights)
+-- Você pode ajustar os códigos hexadecimais para combinar com seu tema
+local function setup_highlights()
+	-- Cor para a letra de atalho (Fundo verde/cinza, texto claro)
+	vim.api.nvim_set_hl(0, "MyMenuBadge", { bg = "#2e3e43", fg = "#89ddff" })
+	-- Cor para o item selecionado (Fundo azul mais forte)
+	vim.api.nvim_set_hl(0, "MyMenuSelected", { bg = "#005f87", fg = "#ffffff" })
+	-- Cor do texto do arquivo (Amarelo/Branco)
+	vim.api.nvim_set_hl(0, "MyMenuFile", { fg = "#ebdbb2" })
 end
 
-return UI
+function UI.create_menu(items)
+	setup_highlights()
+
+	local lines = {}
+	for _, item in ipairs(items) do
+		table.insert(lines, item.filename)
+	end
+	vim.api.nvim_buf_set_lines(state.buffer, 0, -1, false, lines)
+
+	-- 3. Adicionar "Virtual Text" (as letras coloridas na direita)
+	for i, item in ipairs(items) do
+		-- Definir qual highlight usar. Se for a linha 2 (exemplo), usa o destaque.
+		local badge_hl = "MyMenuBadge"
+		if i == 2 then -- Simulando que o segundo item está ativo/selecionado
+			badge_hl = "MyMenuSelected"
+		end
+
+		vim.api.nvim_buf_set_extmark(state.buffer, UI.ns_id, i - 1, 0, {
+			-- O texto que aparece (ex: " u ")
+			virt_text = { { " " .. item.key .. " ", badge_hl } },
+			-- Posição: 'eol' coloca no final da linha, 'overlay' coloca em cima
+			virt_text_pos = "eol",
+			-- Adiciona um highlight na linha inteira se quiser
+			hl_mode = "combine",
+		})
+
+		-- Opcional: Colorir o nome do arquivo também
+		vim.api.nvim_buf_add_highlight(state.buffer, UI.ns_id, "MyMenuFile", i - 1, 0, -1)
+	end
+
+	-- 4. Calcular largura e altura
+	local width = 20 -- Largura fixa ou calculada
+	local height = #items
+
+	-- 5. Abrir a janela
+	UI.window = vim.api.nvim_open_win(state.buffer, true, {
+		relative = "cursor",
+		width = width,
+		height = height,
+		row = 1,
+		col = 0,
+		-- style = "minimal",
+		border = "none",
+	})
+
+	-- Configurações da janela para parecer um menu
+	vim.api.nvim_win_set_option(UI.window, "cursorline", true) -- Destaca a linha atual
+	vim.api.nvim_win_set_option(UI.window, "winhl", "Normal:NormalFloat,CursorLine:MyMenuSelected")
+end

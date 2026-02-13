@@ -1,4 +1,0 @@
-local Logic = {}
-
-
-return Logic
