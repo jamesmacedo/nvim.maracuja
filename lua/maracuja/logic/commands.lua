@@ -3,9 +3,23 @@ local mark = require("maracuja.models.mark")
 local state = require("maracuja.models.state")
 
 local fun = require("maracuja.vendor.fun")
-local serpent = require("maracuja.vendor.serpent")
+-- local serpent = require("maracuja.vendor.serpent")
 
 return function ()
+
+	vim.api.nvim_create_user_command("MarkRewind", function(data)
+		local m = state.marks[#state.marks]
+
+		if m ~= nil then
+			local pos = vim.api.nvim_buf_get_extmark_by_id(0, config.tracker, m.pos_id, {})
+			if next(pos) ~= nil then
+				vim.api.nvim_win_set_cursor(0, { pos[1] + 1, pos[2] })
+				state.marks[m.pos_id]:delete()
+				state.marks[m.pos_id] = nil
+			end
+		end
+	end, {})
+
 	vim.api.nvim_create_user_command("MarkGo", function(data)
 		local m = fun.iter(state.marks):filter(function (value)
 			return value.id == data.fargs[1]
