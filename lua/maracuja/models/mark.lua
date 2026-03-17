@@ -21,6 +21,11 @@ function Mark.new()
 
 	local line = vim.trim(raw_line)
 
+	if line == '' or line == nil then
+		vim.notify("Empty line")
+		return nil
+	end
+
 	local ids = {}
 
 	for _, mark in ipairs(state.marks) do
@@ -29,7 +34,6 @@ function Mark.new()
 
 	local i = 1
 	for char in line:gmatch(".") do
-		print("Char: " .. char)
 		if helpers.tabl.has_value(ids, char) == false then
 			self.id = line:sub(i, i)
 			break

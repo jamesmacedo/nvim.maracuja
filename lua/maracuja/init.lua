@@ -7,7 +7,7 @@ local M = {}
 
 M.setup = function() end
 
-state.setup()
+-- state.setup()
 
 vim.keymap.set("n", "<leader>]", ":MarkCircle<CR>", { noremap = true, silent = true, nowait = true })
 vim.keymap.set("n", "<leader>]]", ":MarkToggle<CR>", { noremap = true, silent = true })
