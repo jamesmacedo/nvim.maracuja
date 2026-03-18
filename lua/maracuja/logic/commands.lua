@@ -1,41 +1,39 @@
 local config = require("maracuja.config")
+local ui = require("maracuja.ui")
 local mark = require("maracuja.models.mark")
 local state = require("maracuja.models.state")
+local move = require("maracuja.logic.movement")
 
-local fun = require("maracuja.vendor.fun")
 -- local serpent = require("maracuja.vendor.serpent")
 
-return function ()
+return function()
+	vim.api.nvim_create_user_command("MarkShow", function()
+		local orders = state.orders
 
-	vim.api.nvim_create_user_command("MarkRewind", function(data)
+		if #orders == 0 then
+			vim.notify("No marks found")
+			return
+		end
+
+		ui.show_window()
+	end, {})
+
+	vim.api.nvim_create_user_command("MarkRewind", function()
 		local m = state.marks[#state.marks]
 
 		if m ~= nil then
 			local pos = vim.api.nvim_buf_get_extmark_by_id(0, config.tracker, m.pos_id, {})
 			if next(pos) ~= nil then
 				vim.api.nvim_win_set_cursor(0, { pos[1] + 1, pos[2] })
-				state.marks[m.pos_id]:delete()
-				state.marks[m.pos_id] = nil
+				state.marks[m.id]:delete()
+				state.marks[m.id] = nil
 			end
 		end
 	end, {})
 
 	vim.api.nvim_create_user_command("MarkGo", function(data)
-		local m = fun.iter(state.marks):filter(function (value)
-			return value.id == data.fargs[1]
-		end):totable()[1]
-
-		if m == nil then
-			vim.notify("No mark found")
-		end
-
-		if m ~= nil then
-			local pos = vim.api.nvim_buf_get_extmark_by_id(0, config.tracker, m.pos_id, {})
-			if next(pos) ~= nil then
-				vim.api.nvim_win_set_cursor(0, { pos[1] + 1, pos[2] })
-			end
-		end
-	end, { nargs=1, desc="Mark id"})
+		move.jump_to(data.fargs[1])
+	end, { nargs = 1, desc = "Mark id" })
 
 	vim.api.nvim_create_user_command("MarkToggle", function()
 		local c_row = vim.api.nvim_win_get_cursor(0)[1]
@@ -46,19 +44,20 @@ return function ()
 			local id = marca[1]
 			local row = marca[2]
 
-			if row + 1 == c_row then
-				state.marks[id]:delete()
-				state.marks[id] = nil
-				state.orders[id] = nil
-				return
-			end
+			-- if row + 1 == c_row then
+			-- 	state.marks[id]:delete()
+			-- 	state.marks[id] = nil
+			-- 	state.orders[id] = nil
+			-- 	return
+			-- end
 		end
 
 		local m = mark.new()
 
 		if m ~= nil then
-			state.marks[m.pos_id] = m
-			table.insert(state.orders, m.pos_id)
+			vim.notify("id: " .. m.id)
+			state.marks[m.id] = m
+			table.insert(state.orders, m.id)
 		end
 	end, {})
 
