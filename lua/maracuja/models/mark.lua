@@ -20,7 +20,7 @@ function Mark:delete()
 		return id ~= self.id
 	end):totable()
 
-    vim.notify("Mark " .. self.id .. " deleted with sucess.")
+    -- vim.notify("Mark " .. self.id .. " deleted with sucess.")
 end
 
 function Mark.new()
@@ -43,7 +43,6 @@ function Mark.new()
 	local ids = {}
 
 	for _, ord in pairs(state.orders) do
-		vim.notify("odem: " .. ord)
 		table.insert(ids, state.marks[ord].id)
 	end
 
