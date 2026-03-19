@@ -2,6 +2,8 @@ local config = require("maracuja.config")
 local helpers = require("maracuja.helpers")
 local state = require("maracuja.models.state")
 
+local fun = require("maracuja.vendor.fun")
+
 local Mark = {}
 
 function Mark:delete()
@@ -11,6 +13,14 @@ function Mark:delete()
 		id = self.signal_id,
 		buffer = self.buf,
 	})
+
+	state.marks[self.id] = nil
+
+	state.orders = fun.iter(state.orders):filter(function(id)
+		return id ~= self.id
+	end)
+
+    vim.notify("Mark " .. self.id .. " deleted with sucess.")
 end
 
 function Mark.new()

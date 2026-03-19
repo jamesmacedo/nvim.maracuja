@@ -3,6 +3,7 @@ local ui = require("maracuja.ui")
 local mark = require("maracuja.models.mark")
 local state = require("maracuja.models.state")
 local move = require("maracuja.logic.movement")
+local fun = require("maracuja.vendor.fun")
 
 -- local serpent = require("maracuja.vendor.serpent")
 
@@ -44,12 +45,16 @@ return function()
 			local id = marca[1]
 			local row = marca[2]
 
-			-- if row + 1 == c_row then
-			-- 	state.marks[id]:delete()
-			-- 	state.marks[id] = nil
-			-- 	state.orders[id] = nil
-			-- 	return
-			-- end
+			if row + 1 == c_row then
+				local m = fun.iter(state.marks)
+					:filter(function(_, ma)
+						return ma.pos_id == id
+					end)
+					:totable()[1]
+
+				state.marks[m]:delete()
+				return
+			end
 		end
 
 		local m = mark.new()
@@ -60,34 +65,4 @@ return function()
 			table.insert(state.orders, m.id)
 		end
 	end, {})
-
-	-- vim.api.nvim_create_user_command("MarkCircle", function()
-	-- 	vim.api.nvim_set_hl(0, "signal_fg", { fg = config.stale, bold = true })
-	--
-	-- 	local m = state.marks[state.orders[state.position]]
-	--
-	-- 	if m then
-	-- 		local pos = vim.api.nvim_buf_get_extmark_by_id(0, config.tracker, m.pos_id, {})
-	-- 		if next(pos) ~= nil then
-	-- 			vim.api.nvim_win_set_cursor(0, { pos[1] + 1, pos[2] })
-	-- 		end
-	-- 	end
-	--
-	-- 	vim.cmd("redraw")
-	--
-	-- 	if state.position < #state.orders then
-	-- 		state.position = state.position + 1
-	-- 	else
-	-- 		state.position = 1
-	-- 	end
-	-- end, {})
-	--
-	-- vim.api.nvim_create_user_command("MarkFind", function()
-	-- 	vim.api.nvim_set_hl(0, "signal_fg", { fg = config.stale, bold = true })
-	-- 	ui.show_menu({
-	-- 		{ filename = "ui.lua", key = "u" },
-	-- 		{ filename = "init.lua", key = ";" },
-	-- 		{ filename = "api.lua", key = "a" },
-	-- 	})
-	-- end, {})
 end

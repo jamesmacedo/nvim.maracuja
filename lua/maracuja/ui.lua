@@ -36,6 +36,14 @@ function UI.draw()
 	end
 end
 
+function UI.delete()
+	local m = state.marks[UI.ids[UI.current_pos]]
+	if m ~= nil then
+		m:delete()
+		vim.api.nvim_win_close(UI.window, true)
+	end
+end
+
 function UI.move(step)
 	local new_pos = UI.current_pos + step
 	if (new_pos > 0 and new_pos <= #UI.lines) then
@@ -48,6 +56,9 @@ end
 
 function UI.show_window()
 	setup_highlights()
+
+	UI.lines = {}
+	UI.ids = {}
 
 	local original_guicursor = vim.opt.guicursor:get()
 
@@ -93,7 +104,6 @@ function UI.show_window()
 		local m = state.marks[UI.ids[UI.current_pos]]
 
 		if m ~= nil then
-			vim.notify(m.id)
 			move.jump_to(m.id)
 		end
 
@@ -103,6 +113,7 @@ function UI.show_window()
 	local opts = { buffer = state.buffer, noremap = true, silent = true }
 	vim.keymap.set("n", "<Up>", function() UI.move(-1) end, opts)
 	vim.keymap.set("n", "<Down>", function() UI.move(1) end, opts)
+	vim.keymap.set("n", "d", function() UI.delete() end, opts)
 
 
 	UI.draw()

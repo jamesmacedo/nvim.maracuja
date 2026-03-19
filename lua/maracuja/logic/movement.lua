@@ -1,5 +1,4 @@
 local config = require("maracuja.config")
-local fun = require("maracuja.vendor.fun")
 local state = require("maracuja.models.state")
 
 local movement = {}
