@@ -57,12 +57,6 @@ return function()
 			end
 		end
 
-		local m = mark.new()
-
-		if m ~= nil then
-			vim.notify("id: " .. m.id)
-			state.marks[m.id] = m
-			table.insert(state.orders, m.id)
-		end
+		mark.new()
 	end, {})
 end

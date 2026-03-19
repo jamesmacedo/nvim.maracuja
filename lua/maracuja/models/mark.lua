@@ -18,7 +18,7 @@ function Mark:delete()
 
 	state.orders = fun.iter(state.orders):filter(function(id)
 		return id ~= self.id
-	end)
+	end):totable()
 
     vim.notify("Mark " .. self.id .. " deleted with sucess.")
 end
@@ -42,8 +42,9 @@ function Mark.new()
 
 	local ids = {}
 
-	for _, mark in ipairs(state.marks) do
-		table.insert(ids, mark.id)
+	for _, ord in pairs(state.orders) do
+		vim.notify("odem: " .. ord)
+		table.insert(ids, state.marks[ord].id)
 	end
 
 	local i = 1
@@ -71,6 +72,9 @@ function Mark.new()
 	})
 
 	self.signal_id = vim.fn.sign_place(0, "signals", id, self.buf, { lnum = pos[1], priority = 2 })
+
+	state.marks[self.id] = self
+	table.insert(state.orders, self.id)
 
 	return self
 end
