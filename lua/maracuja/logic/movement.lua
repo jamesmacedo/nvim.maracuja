@@ -1,10 +1,9 @@
 local config = require("maracuja.config")
-local state = require("maracuja.models.state")
 
 local movement = {}
 
 function movement.jump_to(mark_id)
-    local m = state.marks[mark_id]
+    local m = config.state.marks[mark_id]
     if m ~= nil then
 
         if not vim.api.nvim_buf_is_valid(m.buf) then

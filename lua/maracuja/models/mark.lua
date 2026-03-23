@@ -1,6 +1,5 @@
 local config = require("maracuja.config")
 local helpers = require("maracuja.helpers")
-local state = require("maracuja.models.state")
 
 local fun = require("maracuja.vendor.fun")
 
@@ -14,9 +13,9 @@ function Mark:delete()
 		buffer = self.buf,
 	})
 
-	state.marks[self.id] = nil
+	config.state.marks[self.id] = nil
 
-	state.orders = fun.iter(state.orders):filter(function(id)
+	config.state.orders = fun.iter(config.state.orders):filter(function(id)
 		return id ~= self.id
 	end):totable()
 
@@ -42,8 +41,8 @@ function Mark.new()
 
 	local ids = {}
 
-	for _, ord in pairs(state.orders) do
-		table.insert(ids, state.marks[ord].id)
+	for _, ord in pairs(config.state.orders) do
+		table.insert(ids, config.state.marks[ord].id)
 	end
 
 	local i = 1
@@ -72,8 +71,8 @@ function Mark.new()
 
 	self.signal_id = vim.fn.sign_place(0, "signals", id, self.buf, { lnum = pos[1], priority = 2 })
 
-	state.marks[self.id] = self
-	table.insert(state.orders, self.id)
+	config.state.marks[self.id] = self
+	table.insert(config.state.orders, self.id)
 
 	return self
 end

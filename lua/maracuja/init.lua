@@ -1,13 +1,10 @@
 local commands = require("maracuja.logic.commands")
-local state = require("maracuja.models.state")
 
 vim.opt.signcolumn = "yes:2"
 
 local M = {}
 
 M.setup = function() end
-
--- state.setup()
 
 vim.keymap.set("n", "s", ":MarkShow<CR>", { noremap = true, silent = true, nowait = true })
 vim.keymap.set("n", "<leader>ss", ":MarkToggle<CR>", { noremap = true, silent = true })
