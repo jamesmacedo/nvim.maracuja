@@ -1,5 +1,7 @@
 local config = require("maracuja.config")
 local move = require("maracuja.logic.movement")
+local helpers = require("maracuja.helpers")
+local fun = require("maracuja.vendor.fun")
 
 local UI = {
 	open = false,
@@ -8,7 +10,7 @@ local UI = {
 	current_pos = 1,
 	window = nil,
 	original_guicursor = nil,
-	events_done = false
+	events_done = false,
 }
 
 local augroup = vim.api.nvim_create_augroup("MaracujaUI", { clear = true })
@@ -25,18 +27,17 @@ local function close()
 	config.state.is_menu_open = false
 end
 
-function UI.draw()
-
+function UI:draw()
 	vim.api.nvim_buf_clear_namespace(config.buffer, config.ui, 0, -1)
 
-	for i, item in ipairs(config.state.orders) do
+	for i, line in pairs(self.lines) do
 		local badge_hl = "MyMenuBadge"
 		if i == 2 then
 			badge_hl = "MyMenuSelected"
 		end
 
 		vim.api.nvim_buf_set_extmark(config.buffer, config.ui, i - 1, 0, {
-			virt_text = { { " " .. config.state.marks[item].id .. " ", badge_hl } },
+			virt_text = { { " " .. line.id .. " ", badge_hl } },
 			virt_text_pos = "inline",
 			hl_mode = "combine",
 		})
@@ -48,7 +49,7 @@ function UI.draw()
 end
 
 function UI.delete()
-	local m = config.state.marks[UI.ids[UI.current_pos]]
+	local m = config.state.marks[UI.lines[UI.current_pos].id]
 	if m ~= nil then
 		m:delete()
 		close()
@@ -57,45 +58,41 @@ end
 
 function UI.move(step)
 	local new_pos = UI.current_pos + step
-	if (new_pos > 0 and new_pos <= #UI.lines) then
+	if new_pos > 0 and new_pos <= #UI.lines then
 		UI.current_pos = new_pos
 	end
-
-	UI.draw()
+	UI:draw()
 end
 
 function UI:setup_events()
-
 	if self.events_done then
 		return
 	end
 
 	self.original_guicursor = vim.opt.guicursor:get()
 
-	vim.api.nvim_create_autocmd({"WinEnter", "BufEnter"}, {
+	vim.api.nvim_create_autocmd({ "WinEnter", "BufEnter" }, {
 		group = augroup,
 		buffer = config.buffer,
-		callback = function ()
+		callback = function()
 			vim.opt.guicursor = "a:HiddenCursor"
-			vim.notify("mudando cursor")
-		end
+		end,
 	})
 
-	vim.api.nvim_create_autocmd({"WinClosed","BufLeave"}, {
+	vim.api.nvim_create_autocmd({ "WinClosed", "BufLeave" }, {
 		group = augroup,
 		buffer = config.buffer,
-		callback = function ()
+		callback = function()
 			vim.opt.guicursor = self.original_guicursor
-		end
+		end,
 	})
 
 	self.events_done = true
-
 end
 
 function UI:toggle_menu()
 
-	if not config.state.orders or #config.state.orders == 0 then
+	if helpers.tablelength(config.state.orders) == 0 then
 		vim.notify("No marks found")
 		return
 	end
@@ -105,20 +102,23 @@ function UI:toggle_menu()
 	setup_highlights()
 
 	UI.lines = {}
-	UI.ids = {}
 	UI.current_pos = 1
 
 	local width = 40
-	local height = #config.state.orders
+	local height = helpers.tablelength(config.state.orders)
 
-	for pos, item in ipairs(config.state.orders) do
-		table.insert(UI.lines, " " .. config.state.marks[item].line:sub(0, 30))
-		UI.ids[pos] = config.state.marks[item].id
+	for _, item in pairs(config.state.orders) do
+		table.insert(
+			self.lines,
+			{ content = " " .. config.state.marks[item].line:sub(0, 30), id = config.state.marks[item].id }
+		)
 	end
 
-	vim.api.nvim_buf_set_option(config.buffer, 'modifiable', true)
+	vim.api.nvim_buf_set_option(config.buffer, "modifiable", true)
 
-	vim.api.nvim_buf_set_lines(config.buffer, 0, -1, false, UI.lines)
+	vim.api.nvim_buf_set_lines(config.buffer, 0, -1, false, fun.map(function (value)
+		return value.content
+	end, self.lines):totable())
 
 	self:setup_events()
 
@@ -132,12 +132,12 @@ function UI:toggle_menu()
 		border = "none",
 	})
 
-	vim.api.nvim_buf_set_option(config.buffer, 'modifiable', false)
+	vim.api.nvim_buf_set_option(config.buffer, "modifiable", false)
 
 	local opts = { buffer = config.buffer, noremap = true, silent = true }
 
 	vim.keymap.set("n", "<CR>", function()
-		local m = config.state.marks[UI.ids[UI.current_pos]]
+		local m = config.state.marks[UI.lines[UI.current_pos].id]
 
 		if m ~= nil then
 			move.jump_to(m.id)
@@ -146,13 +146,21 @@ function UI:toggle_menu()
 		close()
 	end)
 
-	vim.keymap.set("n", "<Up>", function() UI.move(-1) end, opts)
-	vim.keymap.set("n", "<Down>", function() UI.move(1) end, opts)
-	vim.keymap.set("n", "d", function() UI.delete() end, opts)
+	vim.keymap.set("n", "<Up>", function()
+		UI.move(-1)
+	end, opts)
+	vim.keymap.set("n", "<Down>", function()
+		UI.move(1)
+	end, opts)
+	vim.keymap.set("n", "d", function()
+		UI.delete()
+	end, opts)
 
-	vim.keymap.set("n", "<Esc>", function() close() end, opts)
+	vim.keymap.set("n", "<Esc>", function()
+		close()
+	end, opts)
 
-	UI.draw()
+	UI:draw()
 end
 
 return UI

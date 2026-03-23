@@ -8,17 +8,9 @@ local fun = require("maracuja.vendor.fun")
 
 return function()
 	vim.api.nvim_create_user_command("MarkShow", function()
-		local orders = config.state.orders
-
-		if #orders == 0 then
-			vim.notify("No marks found")
-			return
-		end
-
 		if config.state.is_menu_open == false then
 			ui:toggle_menu()
 		end
-
 	end, {})
 
 	vim.api.nvim_create_user_command("MarkRewind", function()

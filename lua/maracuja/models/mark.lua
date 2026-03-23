@@ -15,8 +15,8 @@ function Mark:delete()
 
 	config.state.marks[self.id] = nil
 
-	config.state.orders = fun.iter(config.state.orders):filter(function(id)
-		return id ~= self.id
+	config.state.orders = fun.iter(config.state.orders):filter(function(_, value)
+		return value ~= self.id
 	end):totable()
 
     -- vim.notify("Mark " .. self.id .. " deleted with sucess.")
@@ -72,7 +72,20 @@ function Mark.new()
 	self.signal_id = vim.fn.sign_place(0, "signals", id, self.buf, { lnum = pos[1], priority = 2 })
 
 	config.state.marks[self.id] = self
-	table.insert(config.state.orders, self.id)
+	config.state.orders[pos[1] - 1] = self.id
+
+	local keys_iter = fun.map(function(k, _) return k end, config.state.orders)
+	local sorted_keys = fun.totable(keys_iter)
+
+	table.sort(sorted_keys)
+
+	local new_arr = {}
+
+	fun.each(function(k)
+		new_arr[k] = config.state.orders[k]
+	end, sorted_keys)
+
+	config.state.orders = new_arr
 
 	return self
 end
