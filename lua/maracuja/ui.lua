@@ -32,8 +32,10 @@ function UI:draw()
 
 	for i, line in pairs(self.lines) do
 		local badge_hl = "MyMenuBadge"
-		if i == 2 then
+
+		if UI.current_pos == i then
 			badge_hl = "MyMenuSelected"
+			vim.api.nvim_buf_add_highlight(config.buffer, config.ui, "MyMenuFile", i - 1, 0, -1)
 		end
 
 		vim.api.nvim_buf_set_extmark(config.buffer, config.ui, i - 1, 0, {
@@ -42,9 +44,6 @@ function UI:draw()
 			hl_mode = "combine",
 		})
 
-		if UI.current_pos == i then
-			vim.api.nvim_buf_add_highlight(config.buffer, config.ui, "MyMenuFile", i - 1, 0, -1)
-		end
 	end
 end
 

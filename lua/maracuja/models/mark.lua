@@ -15,11 +15,16 @@ function Mark:delete()
 
 	config.state.marks[self.id] = nil
 
-	config.state.orders = fun.iter(config.state.orders):filter(function(_, value)
-		return value ~= self.id
-	end):totable()
+	local new_arr = {}
 
-    -- vim.notify("Mark " .. self.id .. " deleted with sucess.")
+	fun.iter(config.state.orders):each(function(key, value)
+		if value ~= self.id  then
+			new_arr[key] = value
+		end
+	end)
+
+	config.state.orders = new_arr
+
 end
 
 function Mark.new()
