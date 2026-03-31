@@ -14,15 +14,9 @@ return function()
 	end, {})
 
 	vim.api.nvim_create_user_command("MarkRewind", function()
-		local m = config.state.marks[#config.state.marks]
-
+		local m = config.state.history[2]
 		if m ~= nil then
-			local pos = vim.api.nvim_buf_get_extmark_by_id(0, config.tracker, m.pos_id, {})
-			if next(pos) ~= nil then
-				vim.api.nvim_win_set_cursor(0, { pos[1] + 1, pos[2] })
-				config.state.marks[m.id]:delete()
-				config.state.marks[m.id] = nil
-			end
+			move.jump_to(m.id)
 		end
 	end, {})
 
@@ -50,7 +44,7 @@ return function()
 				return
 			end
 		end
+		config.add_history(mark.new())
 
-		mark.new()
 	end, {})
 end

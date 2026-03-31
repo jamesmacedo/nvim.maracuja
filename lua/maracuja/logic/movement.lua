@@ -16,6 +16,7 @@ function movement.jump_to(mark_id)
             vim.api.nvim_win_set_buf(m.win, m.buf)
             vim.api.nvim_win_set_cursor(m.win, { pos[1] + 1, pos[2] })
         end
+        config.add_history(m)
     end
 end
 

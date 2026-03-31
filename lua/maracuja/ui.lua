@@ -3,6 +3,8 @@ local move = require("maracuja.logic.movement")
 local helpers = require("maracuja.helpers")
 local fun = require("maracuja.vendor.fun")
 
+local states = { IDLE = 0, DELETING = 1 }
+
 local UI = {
 	open = false,
 	lines = {},
@@ -38,12 +40,13 @@ function UI:draw()
 			vim.api.nvim_buf_add_highlight(config.buffer, config.ui, "MyMenuFile", i - 1, 0, -1)
 		end
 
+		-- local icon = i == 1 and "󰑟" or line.id
+
 		vim.api.nvim_buf_set_extmark(config.buffer, config.ui, i - 1, 0, {
 			virt_text = { { " " .. line.id .. " ", badge_hl } },
 			virt_text_pos = "inline",
 			hl_mode = "combine",
 		})
-
 	end
 end
 
@@ -90,7 +93,6 @@ function UI:setup_events()
 end
 
 function UI:toggle_menu()
-
 	if helpers.tablelength(config.state.orders) == 0 then
 		vim.notify("No marks found")
 		return
@@ -106,6 +108,8 @@ function UI:toggle_menu()
 	local width = 40
 	local height = helpers.tablelength(config.state.orders)
 
+	-- table.insert(self.lines, { content = " " .. config.state.last.line:sub(0, 30) .. " ", id = config.state.last.id })
+
 	for _, item in pairs(config.state.orders) do
 		table.insert(
 			self.lines,
@@ -115,9 +119,15 @@ function UI:toggle_menu()
 
 	vim.api.nvim_buf_set_option(config.buffer, "modifiable", true)
 
-	vim.api.nvim_buf_set_lines(config.buffer, 0, -1, false, fun.map(function (value)
-		return value.content
-	end, self.lines):totable())
+	vim.api.nvim_buf_set_lines(
+		config.buffer,
+		0,
+		-1,
+		false,
+		fun.map(function(value)
+			return value.content
+		end, self.lines):totable()
+	)
 
 	self:setup_events()
 
