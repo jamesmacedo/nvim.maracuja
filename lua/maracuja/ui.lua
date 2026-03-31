@@ -5,6 +5,8 @@ local fun = require("maracuja.vendor.fun")
 
 local states = { IDLE = 0, DELETING = 1 }
 
+local MAX_COL_ROWS = 35
+
 local UI = {
 	open = false,
 	lines = {},
@@ -18,6 +20,7 @@ local UI = {
 local augroup = vim.api.nvim_create_augroup("MaracujaUI", { clear = true })
 
 local function setup_highlights()
+	vim.api.nvim_set_hl(0, "RewindBadge", { bg = "#1f2a2e", fg = "#89ddff", default = true })
 	vim.api.nvim_set_hl(0, "MyMenuBadge", { bg = "#2e3e43", fg = "#89ddff", default = true })
 	vim.api.nvim_set_hl(0, "MyMenuSelected", { bg = "#005f87", fg = "#ffffff", default = true })
 	vim.api.nvim_set_hl(0, "MyMenuFile", { fg = "#ebdbb2", default = true })
@@ -40,10 +43,11 @@ function UI:draw()
 			vim.api.nvim_buf_add_highlight(config.buffer, config.ui, "MyMenuFile", i - 1, 0, -1)
 		end
 
-		-- local icon = i == 1 and "󰑟" or line.id
+		local icon = i == 1 and #config.state.history == 2 and "󰑟" or line.id
+		local color = i == 1 and "RewindBadge" or badge_hl
 
 		vim.api.nvim_buf_set_extmark(config.buffer, config.ui, i - 1, 0, {
-			virt_text = { { " " .. line.id .. " ", badge_hl } },
+			virt_text = { { " " .. icon .. " ", color } },
 			virt_text_pos = "inline",
 			hl_mode = "combine",
 		})
@@ -105,16 +109,28 @@ function UI:toggle_menu()
 	UI.lines = {}
 	UI.current_pos = 1
 
-	local width = 40
+	local width = MAX_COL_ROWS + 5
 	local height = helpers.tablelength(config.state.orders)
 
-	-- table.insert(self.lines, { content = " " .. config.state.last.line:sub(0, 30) .. " ", id = config.state.last.id })
+	local last = nil
+
+	if #config.state.history == 2 then
+		last = config.state.history[2]
+		table.insert(self.lines, { content = " " .. last.line:sub(0, MAX_COL_ROWS) .. " ", id = last.id })
+	end
 
 	for _, item in pairs(config.state.orders) do
+		local m = config.state.marks[item]
+
+		if last ~= nil and last.id == m.id then
+			goto continue
+		end
+
 		table.insert(
 			self.lines,
-			{ content = " " .. config.state.marks[item].line:sub(0, 30), id = config.state.marks[item].id }
+			{ content = " " .. m.line:sub(0, MAX_COL_ROWS), id = m.id }
 		)
+	    ::continue::
 	end
 
 	vim.api.nvim_buf_set_option(config.buffer, "modifiable", true)
@@ -136,8 +152,8 @@ function UI:toggle_menu()
 		width = width,
 		height = height,
 		row = 1,
-		col = 0,
-		-- style = "minimal",
+		col = 1,
+		style = "minimal",
 		border = "none",
 	})
 
@@ -154,6 +170,15 @@ function UI:toggle_menu()
 
 		close()
 	end)
+
+	vim.keymap.set("n", "s", function()
+		if last ~= nil then
+			move.jump_to(last.id)
+			close()
+		else
+			vim.notify("No mark found to rewind")
+		end
+	end, opts)
 
 	vim.keymap.set("n", "<Up>", function()
 		UI.move(-1)
