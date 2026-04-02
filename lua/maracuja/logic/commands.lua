@@ -1,8 +1,8 @@
 local config = require("maracuja.config")
 local ui = require("maracuja.ui")
-local mark = require("maracuja.models.mark")
 local move = require("maracuja.logic.movement")
 local fun = require("maracuja.vendor.fun")
+local modes = require("maracuja.modes")
 
 -- local serpent = require("maracuja.vendor.serpent")
 
@@ -25,6 +25,9 @@ return function()
 	end, { nargs = 1, desc = "Mark id" })
 
 	vim.api.nvim_create_user_command("MarkToggle", function()
+
+		local mode = modes.get_mode()
+
 		local c_row = vim.api.nvim_win_get_cursor(0)[1]
 
 		local marcas = vim.api.nvim_buf_get_extmarks(0, config.tracker, 0, -1, {})
@@ -32,19 +35,13 @@ return function()
 		for _, marca in ipairs(marcas) do
 			local id = marca[1]
 			local row = marca[2]
-
 			if row + 1 == c_row then
-				local m = fun.iter(config.state.marks)
-					:filter(function(_, ma)
-						return ma.pos_id == id
-					end)
-					:totable()[1]
-
-				config.state.marks[m]:delete()
+				mode:delete_by("pos_id", id)
 				return
 			end
 		end
-		config.add_history(mark.new())
+		-- config.add_history(mark.new())
+		mode:add_mark()
 
 	end, {})
 end
